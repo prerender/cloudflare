@@ -25,6 +25,7 @@ const BOT_AGENTS = [
   "google-inspectiontool", "telegrambot",
   // Testing
   "integration-test",
+  "iframely",
 ];
 
 const IGNORE_EXTENSIONS = [
