@@ -31,9 +31,10 @@ const BOT_AGENTS = [
 const IGNORE_EXTENSIONS = [
   ".js", ".css", ".xml", ".less", ".png", ".jpg", ".jpeg", ".gif", ".pdf",
   ".doc", ".txt", ".ico", ".rss", ".zip", ".mp3", ".rar", ".exe", ".wmv",
-  ".doc", ".avi", ".ppt", ".mpg", ".mpeg", ".tif", ".wav", ".mov", ".psd",
+  ".avi", ".ppt", ".mpg", ".mpeg", ".tif", ".wav", ".mov", ".psd",
   ".ai", ".xls", ".mp4", ".m4a", ".swf", ".dat", ".dmg", ".iso", ".flv",
-  ".m4v", ".torrent", ".woff", ".ttf", ".svg", ".webmanifest",
+  ".m4v", ".torrent", ".woff", ".woff2", ".ttf", ".otf", ".eot", ".svg",
+  ".webp", ".avif", ".webmanifest",
 ];
 
 export default {
