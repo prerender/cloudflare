@@ -38,10 +38,16 @@ const IGNORE_EXTENSIONS = [
 ];
 
 export default {
-  async fetch(request, env) {
-    return await handleRequest(request, env).catch(
-      (err) => new Response(err.stack, { status: 500 })
-    );
+  async fetch(request, env, ctx) {
+    // Safety net for anything thrown outside the catch below - Cloudflare serves the
+    // origin response instead of its own error page.
+    ctx.passThroughOnException();
+
+    return await handleRequest(request, env).catch((err) => {
+      // Fail open: log for Worker logs, then serve the origin instead of a 500 + stack trace.
+      console.error(err);
+      return fetch(request);
+    });
   },
 };
 
