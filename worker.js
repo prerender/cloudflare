@@ -15,7 +15,7 @@ const BOT_AGENTS = [
   "oncrawlbot", "botifybot", "deepcrawl", "lumar", "rogerbot", "dotbot",
   // AI Bots
   "gptbot", "chatgpt", "oai-searchbot", "chatgpt-user", "claudebot",
-  "google-extended", "perplexitybot", "perplexity-user", "youbot",
+  "perplexitybot", "perplexity-user", "youbot",
   "amazonbot", "anthropic-ai", "claude-web", "claude-user", "ccbot", "mistralai-user",
   // Other Known Bots & Crawlers
   "embedly", "quora link preview", "showyoubot", "outbrain", "pinterest/0.",
