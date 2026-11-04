@@ -1,10 +1,11 @@
-// User agents handled by Prerender
+// User agents handled by Prerender. Matched as lowercase substrings of the
+// User-Agent, so keep every entry lowercase.
 const BOT_AGENTS = [
   // Search Engines
   "googlebot", "adsbot-google", "apis-google", "mediapartners-google",
   "google-safety", "feedfetcher-google", "googleproducer", "google-site-verification",
-  "bingbot", "yandexbot", "yabrowser", "yahoo", "baiduspider", "naver",
-  "seznambot", "sznprohlizec", "qwantbot", "ecosia", "duckduckbot",
+  "bingbot", "yandexbot", "yahoo", "baiduspider", "naver",
+  "seznambot", "qwantbot", "ecosia", "duckduckbot",
   "duckassistbot", "applebot",
   // Social Media
   "facebookexternalhit", "facebookcatalog", "facebookbot", "meta-externalagent",
@@ -39,34 +40,45 @@ const IGNORE_EXTENSIONS = [
 
 export default {
   async fetch(request, env, ctx) {
-    // Safety net for anything thrown outside the catch below - Cloudflare serves the
+    // Safety net for anything thrown outside the try below - Cloudflare serves the
     // origin response instead of its own error page.
     ctx.passThroughOnException();
 
-    return await handleRequest(request, env).catch((err) => {
-      // Fail open: log for Worker logs, then serve the origin instead of a 500 + stack trace.
+    if (!shouldPrerender(request)) {
+      return fetch(request);
+    }
+
+    // Fail open: a Prerender failure must never take the site down for crawlers.
+    // Only the Prerender call is guarded, so a failed origin request is never sent twice.
+    try {
+      const prerendered = await fetch(prerenderRequest(request, env));
+      if (prerendered.status >= 500) {
+        return fetch(request);
+      }
+      return prerendered;
+    } catch (err) {
       console.error(err);
       return fetch(request);
-    });
+    }
   },
 };
 
-async function handleRequest(request, env) {
+function shouldPrerender(request) {
   const url = new URL(request.url);
   const userAgent = request.headers.get("User-Agent")?.toLowerCase() || "";
   const isPrerender = request.headers.get("X-Prerender");
   const pathName = url.pathname.toLowerCase();
   const lastDot = pathName.lastIndexOf(".");
-  const extension = lastDot > -1 ? pathName.substring(lastDot).toLowerCase() : "";
+  const extension = lastDot > -1 ? pathName.substring(lastDot) : "";
 
-  if (
-    isPrerender ||
-    !BOT_AGENTS.some((bot) => userAgent.includes(bot.toLowerCase())) ||
-    (extension.length && IGNORE_EXTENSIONS.includes(extension))
-  ) {
-    return fetch(request);
-  }
+  return (
+    !isPrerender &&
+    BOT_AGENTS.some((bot) => userAgent.includes(bot)) &&
+    !(extension.length && IGNORE_EXTENSIONS.includes(extension))
+  );
+}
 
+function prerenderRequest(request, env) {
   const newURL = `https://service.prerender.io/${request.url}`;
 
   // Forward only an allowlist. Copying every inbound header lets a caller inject
@@ -82,8 +94,8 @@ async function handleRequest(request, env) {
   newHeaders.set("X-Prerender-Token", env.PRERENDER_TOKEN);
   newHeaders.set("X-Prerender-Int-Type", "CloudFlare");
 
-  return fetch(new Request(newURL, {
+  return new Request(newURL, {
     headers: newHeaders,
     redirect: "manual",
-  }));
+  });
 }
